@@ -1,0 +1,7 @@
+{
+  "name": "ionic_vueappdiklat",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
