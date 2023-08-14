@@ -26,6 +26,10 @@ const routes = [
         path: 'gempa',
         component: () => import('@/views/GempaPage.vue')
       }
+      , {
+        path: 'about',
+        component: () => import('@/views/AboutPage.vue')
+      }
     ]
   }
 ]

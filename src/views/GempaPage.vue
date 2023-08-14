@@ -1,34 +1,36 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Gempa</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content :fullscreen="true" class="ion-padding">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">Gempa</ion-title>
-        </ion-toolbar>
-      </ion-header>
+  <main-layout title="Gempa">
+    <ion-card>
+      <div class="map" ref="mapRef"></div>
+    </ion-card>
+    <ion-card color="light">
+      <ion-card-header>
+        <ion-card-title>
+          <p style="font-size: large;">Gempa Bumi (Yogyakarta)</p>
+        </ion-card-title>
+        <ion-card-subtitle>27 Juli 2023 - 20.03 WIB</ion-card-subtitle>
+      </ion-card-header>
 
+      <ion-card-content>
+        <div class="earthquake-detail">
+          <span class="magnitude"><strong>Magnitude:</strong> 6.7 SR</span>
+          <span class="depth"><strong>Depth:</strong> 10 km</span>
+          <span class="location"><strong>Location:</strong> -7.79°S, 110.37°E </span>
+          <span class="tsunami-warning">Tidak berpotensi tsunami.</span>
+        </div>
+      </ion-card-content>
 
-      <!-- Displaying the Geolocation values -->
-      <div v-if="coordinates" class="centered">
-        <p>Latitude: {{ coordinates.latitude }}</p>
-        <p>Longitude: {{ coordinates.longitude }}</p>
-      </div>
+    </ion-card>
 
-    </ion-content>
-  </ion-page>
+  </main-layout>
 </template>
-
 <script setup>
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
-import { ref } from 'vue';
+import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle } from '@ionic/vue';
+import MainLayout from '../components/layout/MainLayout.vue';
+import { ref, onMounted } from 'vue';
 import { Geolocation } from '@capacitor/geolocation';
 
-// Reactive data for coordinates
+const mapRef = ref(null);
 const coordinates = ref(null);
 
 const printCurrentPosition = async () => {
@@ -43,15 +45,78 @@ const printCurrentPosition = async () => {
   }
 };
 
-printCurrentPosition();
+const initializeGoogleMaps = () => {
+  if (window.google?.maps) {
+    initMap();
+    return;
+  }
+
+  const key = "AIzaSyA1TnLmVoq_tj_pSfVPbmzpXvdWrpFa0Qs";  // Please replace with your Google Maps API key.
+  const googleMapScript = document.createElement("SCRIPT");
+  googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initMap`;
+  googleMapScript.defer = true;
+  googleMapScript.async = true;
+  document.head.appendChild(googleMapScript);
+};
+
+const initMap = () => {
+  const mapInstance = new google.maps.Map(mapRef.value, {
+    zoom: 8,
+    center: { lat:-7.798270297936324, lng: 110.3732486838921 },
+    disableDefaultUI: true,
+  });
+  const marker = new google.maps.Marker({  // Added 'new' keyword here
+    position:  { lat:-7.798270297936324, lng: 110.3732486838921 },
+    map: mapInstance,
+    title: "Current Location"
+  });
+};
+
+onMounted(() => {
+  printCurrentPosition();
+  initializeGoogleMaps();
+});
+
+// Avoid overriding any existing functions.
+if (!window.initMap) {
+  window.initMap = initMap;
+}
 </script>
 
 <style scoped>
-.centered {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%; /* Set this to the height of the parent container */
+.earthquake-detail {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 8px 12px;
 }
-</style>
+
+.earthquake-detail span {
+  display: block;
+  padding: 4px 0;
+}
+
+.magnitude,
+.depth,
+.location {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  /* subtle line for separation */
+}
+
+.location{
+  grid-column: 1 / 3;
+
+}
+
+.tsunami-warning {
+  grid-column: 1 / 3;
+  /* spans the full width */
+  font-weight: bold;
+  /* emphasize the tsunami warning */
+  color: #d32f2f;
+  /* give it a reddish color for warning, adjust if needed */
+}
+
+.map {
+  width: 100%;
+  height: 300px;
+}</style>
